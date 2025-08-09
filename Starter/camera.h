@@ -1,6 +1,6 @@
 #pragma once
-#include "vector.h"
-#include "matrix4x4.h"
+#include "Maths/vector.h"
+#include "Maths/matrix4x4.h"
 
 struct CameraMovement
 {

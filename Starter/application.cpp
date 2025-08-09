@@ -85,10 +85,10 @@ bool Application::init()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Name", NULL, NULL);
+    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Name", NULL, NULL); // TODO: adjust the name
     if (window == NULL)
     {
-        std::cout << "Tworzenie okna nie powiodlo sie." << std::endl;
+        std::cout << "Cannot create window." << std::endl;
         glfwTerminate();
         return false;
     }
@@ -102,7 +102,7 @@ bool Application::init()
     // verify GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
-        std::cout << "Inicjlizacja GLAD nie powiodla sie." << std::endl;
+        std::cout << "Cannot initialize GLAD." << std::endl;
         return false;
     }
 
@@ -154,6 +154,9 @@ void Application::renderGUI()
 void Application::render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
+
+    // drawing code goes here
+
     renderGUI();
     glfwSwapBuffers(window);
     glfwPollEvents();
