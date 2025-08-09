@@ -1,80 +1,56 @@
 #include "application.h"
 
-bool leftMouseDown = false, rightMouseDown = false, zaxis = false, GUIactive = true;
-double xPos = 0.0f, yPos = 0.0f;
-double rotationX = 0.0f, rotationY = 0.0f, rotationZ = 0.0f;
-double translationX = 0.0f, translationY = 0.0f, translationZ = 0.0f;
-int maxR = 0, minR = 0, maxPixelSize = 3;
+ImGuiIO* io = nullptr;
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) GUIactive = !GUIactive;
-    else if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS) zaxis = !zaxis;
-}
-
-void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) 
-{
-    if (button == GLFW_MOUSE_BUTTON_LEFT) 
+    if (!(*io).WantCaptureKeyboard)
     {
-        if (action == GLFW_PRESS)
+        switch (key)
         {
-            maxR = maxPixelSize;
-            minR = maxPixelSize;
-            leftMouseDown = true;
+        case GLFW_KEY_SPACE:
+        {
+            if (action == GLFW_PRESS) Application::cameraMovement.rotating = !Application::cameraMovement.rotating;
+            break;
         }
-        else if (action == GLFW_RELEASE)
+        case GLFW_KEY_UP:
         {
-            maxR = 0;
-            leftMouseDown = false;
+            if (action == GLFW_PRESS) Application::cameraMovement.goingUp = true;
+            else if (action == GLFW_RELEASE) Application::cameraMovement.goingUp = false;
+            break;
+        }
+        case GLFW_KEY_DOWN:
+        {
+            if (action == GLFW_PRESS) Application::cameraMovement.goingDown = true;
+            else if (action == GLFW_RELEASE) Application::cameraMovement.goingDown = false;
+            break;
+        }
+        case GLFW_KEY_RIGHT:
+        {
+            if (action == GLFW_PRESS) Application::cameraMovement.goingRight = true;
+            else if (action == GLFW_RELEASE) Application::cameraMovement.goingRight = false;
+            break;
+        }
+        case GLFW_KEY_LEFT:
+        {
+            if (action == GLFW_PRESS) Application::cameraMovement.goingLeft = true;
+            else if (action == GLFW_RELEASE) Application::cameraMovement.goingLeft = false;
+            break;
+        }
+        case GLFW_KEY_KP_SUBTRACT:
+        {
+            if (action == GLFW_PRESS) Application::cameraMovement.goingBackward = true;
+            else if (action == GLFW_RELEASE) Application::cameraMovement.goingBackward = false;
+            break;
+        }
+        case GLFW_KEY_KP_ADD:
+        {
+            if (action == GLFW_PRESS) Application::cameraMovement.goingForward = true;
+            else if (action == GLFW_RELEASE) Application::cameraMovement.goingForward = false;
+            break;
+        }
         }
     }
-    else if (button == GLFW_MOUSE_BUTTON_RIGHT)
-    {
-        if (action == GLFW_PRESS)
-        {
-            maxR = maxPixelSize;
-            minR = maxPixelSize;
-            rightMouseDown = true;
-        }
-        else if (action == GLFW_RELEASE)
-        {
-            maxR = 0;
-            rightMouseDown = false;
-        }
-    }
-}
-
-void cursorPositionCallback(GLFWwindow* window, double xpos, double ypos) 
-{
-    if (!GUIactive)
-    {
-        if (leftMouseDown) // rotation
-        {
-            if (zaxis)
-            {
-                rotationZ += (ypos - yPos) / 100.0f;
-            }
-            else
-            {
-                rotationX += (xpos - xPos) / 100.0f;
-                rotationY += (ypos - yPos) / 100.0f;
-            }
-        }
-        else if (rightMouseDown) // translation
-        {
-            if (zaxis)
-            {
-                translationZ += (ypos - yPos);
-            }
-            else
-            {
-                translationY += (xpos - xPos);
-                translationX -= (ypos - yPos);
-            }
-        }
-    }
-    xPos = xpos;
-    yPos = ypos;
 }
 
 bool Application::init()
@@ -94,9 +70,7 @@ bool Application::init()
     }
     glfwMakeContextCurrent(window);
 
-    // register GLWF function callbacks
-    glfwSetMouseButtonCallback(window, mouseButtonCallback);
-    glfwSetCursorPosCallback(window, cursorPositionCallback);
+    // register GLWF function callback
     glfwSetKeyCallback(window, keyCallback);
 
     // verify GLAD
@@ -113,12 +87,45 @@ bool Application::init()
     // initialize imgui
     IMGUI_CHECKVERSION();
     ImGui::SetCurrentContext(ImGui::CreateContext());
-    ImGuiIO& io = ImGui::GetIO();
+    io = &ImGui::GetIO();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init();
 
     // create shader program
     shaderProgram = Shader().createShaderProgram("VS.glsl", "FS.glsl");
+    glUseProgram(shaderProgram);
+
+    // initialize uniforms
+    setViewMatrix(camera.getViewMatrix());
+    setProjectionMatrix(ProjectionMatrix(1, WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 1000.0f));
+
+    // TODO: create cube and bind all needed arrays - remove or adjust accordingly
+    float verts[] = {
+        -0.5f, -0.5f, -0.5f,
+         0.5f, -0.5f, -0.5f,
+         0.5f,  0.5f, -0.5f,
+        -0.5f,  0.5f, -0.5f,
+        -0.5f, -0.5f,  0.5f,
+         0.5f, -0.5f,  0.5f,
+         0.5f,  0.5f,  0.5f,
+        -0.5f,  0.5f,  0.5f
+    };
+    unsigned int idx[] = {
+        0,1, 1,2, 2,3, 3,0,
+        4,5, 5,6, 6,7, 7,4,
+        0,4, 1,5, 2,6, 3,7
+    };
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(idx), idx, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
     return true;
 }
 
@@ -145,6 +152,9 @@ void Application::renderGUI()
     ImGui::NewFrame();
 
     ImGui::Begin("GUI");
+
+    // TODO: GUI drawing code
+
     ImGui::End();
 
     ImGui::Render();
@@ -153,11 +163,37 @@ void Application::renderGUI()
 
 void Application::render()
 {
+    // adjust view matrix if the camera has moved
+    if (cameraMovement.goingBackward || cameraMovement.goingDown || cameraMovement.goingLeft || cameraMovement.goingRight || cameraMovement.goingForward || cameraMovement.goingUp)
+    {
+        camera.move(cameraMovement);
+        setViewMatrix(camera.getViewMatrix());
+    }
+
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // drawing code goes here
+    // TODO: OpenGL rendering code goes here
+    // for now rendering a cube
+    glDrawElements(GL_LINES, 24, GL_UNSIGNED_INT, 0);
 
     renderGUI();
     glfwSwapBuffers(window);
     glfwPollEvents();
+}
+
+
+void Application::setViewMatrix(Matrix4x4 matrix)
+{
+    view = matrix;
+    view.toArray(viewMatrix);
+    viewO = glGetUniformLocation(shaderProgram, "view");
+    glUniformMatrix4fv(viewO, 1, GL_TRUE, viewMatrix);
+}
+
+void Application::setProjectionMatrix(Matrix4x4 matrix)
+{
+    projection = matrix;
+    projection.toArray(projectionMatrix);
+    projectionO = glGetUniformLocation(shaderProgram, "projection");
+    glUniformMatrix4fv(projectionO, 1, GL_TRUE, projectionMatrix);
 }

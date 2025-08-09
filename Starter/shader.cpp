@@ -5,7 +5,7 @@ std::string Shader::loadShaderSource(const std::string& filepath)
     std::ifstream file(filepath);
     if (!file.is_open())
     {
-        std::cerr << "ERROR: Nie mozna otworzyc pliku: " << filepath << std::endl;
+        std::cerr << "ERROR: Cannot open file: " << filepath << std::endl;
         return "";
     }
     std::stringstream buffer;

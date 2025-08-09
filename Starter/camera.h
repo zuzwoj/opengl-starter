@@ -13,8 +13,9 @@ struct CameraMovement
 class Camera
 {
 private:
-	const double MOVE_FACTOR = 0.1f;
-	const double ROTATION_FACTOR = 0.005f;
+	// TODO: affects the speed or camera movement - adjust accordingly or turn into a modifiable value depending on the application
+	const double MOVE_FACTOR = 0.005f;
+	const double ROTATION_FACTOR = 0.001f;
 	double rotationX = 0.0f, rotationY = 0.0f;
 
 	void setVectors();
