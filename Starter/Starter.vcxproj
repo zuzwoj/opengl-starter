@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\..\..\..\GLWF\glad.c" />
     <ClCompile Include="..\..\..\..\..\..\..\..\imgui\backends\imgui_impl_glfw.cpp" />
     <ClCompile Include="..\..\..\..\..\..\..\..\imgui\backends\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\..\..\..\..\..\..\..\imgui\imgui.cpp" />
@@ -30,7 +31,6 @@
     <ClCompile Include="applicationStaticVariables.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="glad.c" />
     <ClCompile Include="shader.cpp" />
   </ItemGroup>
   <ItemGroup>
